@@ -33,9 +33,29 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> Settings:
-        app_id = os.getenv("GITHUB_APP_ID", "")
-        key_path = os.getenv("GITHUB_PRIVATE_KEY_PATH", "")
-        raw_key = os.getenv("GITHUB_PRIVATE_KEY", "")
+        def _clean_str(val: Optional[str], default: str = "") -> str:
+            if val is None:
+                return default
+            return val.strip().strip("'\"")
+
+        def _clean_int(val: Optional[str], default: int) -> int:
+            if not val:
+                return default
+            cleaned = val.strip().strip("'\"")
+            try:
+                return int(cleaned)
+            except ValueError:
+                return default
+
+        def _clean_bool(val: Optional[str], default: bool = False) -> bool:
+            if not val:
+                return default
+            cleaned = val.strip().strip("'\"").lower()
+            return cleaned in ("1", "true", "yes", "on")
+
+        app_id = _clean_str(os.getenv("GITHUB_APP_ID", ""))
+        key_path = _clean_str(os.getenv("GITHUB_PRIVATE_KEY_PATH", ""))
+        raw_key = os.getenv("GITHUB_PRIVATE_KEY", "").strip()
         if key_path and Path(key_path).exists() and not raw_key:
             raw_key = Path(key_path).read_text(encoding="utf-8")
 
@@ -43,12 +63,12 @@ class Settings:
             github_app_id=app_id,
             github_private_key_path=key_path,
             github_private_key=raw_key,
-            github_webhook_secret=os.getenv("GITHUB_WEBHOOK_SECRET", ""),
-            dry_run=os.getenv("DIFFSHIELD_DRY_RUN", "0") in ("1", "true", "True"),
-            db_path=os.getenv("DIFFSHIELD_DB_PATH", "diffshield.db"),
-            default_hold_hours=int(os.getenv("DIFFSHIELD_HOLD_HOURS", "12")),
-            host=os.getenv("DIFFSHIELD_HOST", "0.0.0.0"),
-            port=int(os.getenv("PORT", os.getenv("DIFFSHIELD_PORT", "8000")))
+            github_webhook_secret=_clean_str(os.getenv("GITHUB_WEBHOOK_SECRET", "")),
+            dry_run=_clean_bool(os.getenv("DIFFSHIELD_DRY_RUN", "0")),
+            db_path=_clean_str(os.getenv("DIFFSHIELD_DB_PATH", "diffshield.db")),
+            default_hold_hours=_clean_int(os.getenv("DIFFSHIELD_HOLD_HOURS", "12"), 12),
+            host=_clean_str(os.getenv("DIFFSHIELD_HOST", "0.0.0.0")),
+            port=_clean_int(os.getenv("PORT", os.getenv("DIFFSHIELD_PORT", "8000")), 8000)
         )
 
 

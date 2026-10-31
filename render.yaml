@@ -12,14 +12,15 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: DIFFSHIELD_HOLD_HOURS
-        value: "12"
+        value: 12
       - key: DIFFSHIELD_DRY_RUN
-        value: "0"
+        value: 0
       - key: DIFFSHIELD_DB_PATH
-        value: "diffshield.db"
+        value: diffshield.db
       - key: GITHUB_APP_ID
         sync: false
       - key: GITHUB_PRIVATE_KEY
         sync: false
       - key: GITHUB_WEBHOOK_SECRET
         sync: false
+
