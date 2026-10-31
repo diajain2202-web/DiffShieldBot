@@ -1,0 +1,198 @@
+rules:
+  - id: "DS001"
+    name: "Dynamic Code Execution Sink"
+    category: "code-execution"
+    severity: "critical"
+    weight: 34
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      calls_any: ["eval", "Function", "vm.runInThisContext", "vm.runInNewContext"]
+    source_any: ["eval(", "new Function(", "Function("]
+    regex_any: ["\\beval\\s*\\(", "\\bFunction\\s*\\(", "vm\\.runIn"]
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS002"
+    name: "Shell Command Execution"
+    category: "command-execution"
+    severity: "critical"
+    weight: 34
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      calls_any: ["exec", "execSync", "spawn", "spawnSync"]
+      strings_any: ["child_process"]
+    source_any: ["child_process", "exec(", "spawn(", "execSync("]
+    regex_any: ["require\\s*\\(['\"]child_process['\"]\\)", "child_process\\.(exec|spawn|execSync|spawnSync)"]
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS003"
+    name: "Credential Exfiltration"
+    category: "data-exfiltration"
+    severity: "critical"
+    weight: 34
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      calls_any: ["fetch", "https.request", "http.request", "axios", "request"]
+      tokens_any: ["process.env"]
+    source_any: ["fetch", "process.env"]
+    regex_any:
+      - "(?:fetch|https?\\.request|axios|get|post)\\s*\\("
+      - "process\\.env\\.(?:[A-Z0-9_]*(?:TOKEN|KEY|SECRET|AUTH|PASSWORD|PRIVATE|CREDENTIAL)[A-Z0-9_]*)"
+    heuristics: {}
+    all_of: true
+    exclude_if_guard: false
+
+  - id: "DS004"
+    name: "Obfuscated Payload Pattern"
+    category: "obfuscation"
+    severity: "high"
+    weight: 22
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      calls_any: ["String.fromCharCode"]
+    source_any: ["fromCharCode", "\\x", "\\u00"]
+    regex_any:
+      - "(?:\\\\x[0-9a-fA-F]{2}){4,}"
+      - "String\\.fromCharCode\\s*\\(\\s*\\d+(?:\\s*,\\s*\\d+){3,}\\s*\\)"
+      - "Buffer\\.from\\(['\"][A-Za-z0-9+/=]{40,}['\"],\\s*['\"]base64['\"]\\)"
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS005"
+    name: "Minified Bulk Insert"
+    category: "evasion"
+    severity: "medium"
+    weight: 12
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx", "*.json"]
+    ast: {}
+    source_any: []
+    regex_any: []
+    heuristics:
+      min_line_length: 800
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS006"
+    name: "Security Guard Removed"
+    category: "defense-evasion"
+    severity: "high"
+    weight: 22
+    scope: "removed"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      tokens_any: ["continue", "throw", "return"]
+    source_any: ["__proto__", "prototype", "constructor", "hasOwnProperty"]
+    regex_any:
+      - "if\\s*\\([^)]*(?:__proto__|prototype|constructor)[^)]*\\)\\s*(?:continue|return|throw)"
+    heuristics:
+      net_guard_delta_negative: true
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS007"
+    name: "Filesystem Access to Credential Paths"
+    category: "file-tampering"
+    severity: "critical"
+    weight: 34
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      calls_any: ["writeFile", "writeFileSync", "readFile", "readFileSync", "appendFile"]
+    source_any: ["writeFile", ".ssh", ".aws", ".env", "/etc/passwd"]
+    regex_any:
+      - "(?:writeFile|writeFileSync|readFile|readFileSync)\\s*\\([^)]*(?:\\.ssh|\\.aws|\\.env|/etc/passwd)"
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS008"
+    name: "Suspicious Lifecycle Install Script"
+    category: "supply-chain"
+    severity: "critical"
+    weight: 34
+    scope: "added"
+    files: ["*package.json"]
+    ast: {}
+    source_any: ["preinstall", "postinstall", "install"]
+    regex_any:
+      - "\"(?:preinstall|postinstall|install)\"\\s*:\\s*\"[^\"]*(?:curl|wget|powershell|cmd\\.exe|/bin/sh|/bin/bash|python|node\\s+-e|eval)[^\"]*\""
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS009"
+    name: "Untrusted Dependency Source"
+    category: "supply-chain"
+    severity: "high"
+    weight: 22
+    scope: "added"
+    files: ["*package.json"]
+    ast: {}
+    source_any: [":", "http:", "https:", "git:", "file:"]
+    regex_any:
+      - "\"(?:dependencies|devDependencies)\"\\s*:\\s*\\{[^}]*\"[^\"]+\"\\s*:\\s*\"(?:git(?:\\+https?)?:|https?:|file:|\\*|link:)[^\"]*\""
+      - "\"[^\"]+\"\\s*:\\s*\"(?:git(?:\\+https?)?:|https?://[^\"]+\\.tar\\.gz|file:)[^\"]*\""
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS010"
+    name: "CI/CD Tampering or Secret Ingestion"
+    category: "ci-tampering"
+    severity: "high"
+    weight: 22
+    scope: "added"
+    files: [".github/workflows/*.yml", ".github/workflows/*.yaml", "*.github/workflows/*"]
+    ast: {}
+    source_any: ["pull_request_target", "secrets.", "npm publish"]
+    regex_any:
+      - "pull_request_target"
+      - "\\$\\{\\{\\s*secrets\\.[A-Z0-9_]+\\s*\\}\\}"
+      - "npm\\s+publish"
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+
+  - id: "DS011"
+    name: "Prototype Pollution Sink"
+    category: "prototype-pollution"
+    severity: "high"
+    weight: 22
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast:
+      tokens_any: ["__proto__", "prototype", "constructor"]
+    source_any: ["__proto__", "prototype"]
+    regex_any:
+      - "\\[[^\\]]+\\]\\s*=\\s*[^;]+"
+      - "(?:Object\\.assign|merge)\\s*\\("
+    heuristics: {}
+    all_of: true
+    exclude_if_guard: true
+
+  - id: "DS012"
+    name: "Catastrophic Regex Pattern"
+    category: "redos"
+    severity: "medium"
+    weight: 12
+    scope: "added"
+    files: ["*.js", "*.ts", "*.mjs", "*.cjs", "*.jsx", "*.tsx"]
+    ast: {}
+    source_any: ["RegExp", "/"]
+    regex_any:
+      - "\\([^)]*\\+[^)]*\\)\\+"
+      - "\\([^)]*\\*[^)]*\\)\\*"
+      - "/(?:[^/\\\\]|\\\\.)*\\([a-zA-Z0-9_.-]+[+*]\\)[+*](?:[^/\\\\]|\\\\.)*/"
+    heuristics: {}
+    all_of: false
+    exclude_if_guard: false
+

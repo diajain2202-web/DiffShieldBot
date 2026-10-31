@@ -1,0 +1,15 @@
+# DiffShield Repository Policy
+# Note: DiffShield strictly reads this file from the PR base commit, never head.
+
+enforcement: hold     # hold (default 12h) | block (no timer) | close | comment (dry-run)
+hold_hours: 12
+
+ignore_paths:
+  - "dist/**"
+  - "*/dist/**"
+  - "*.min.js"
+  - "*.min.css"
+  - "node_modules/**"
+  - "*/node_modules/**"
+  - ".git/**"
+

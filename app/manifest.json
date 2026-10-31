@@ -1,0 +1,27 @@
+{
+  "name": "DiffShield",
+  "url": "https://github.com/apps/diffshield",
+  "hook_attributes": {
+    "url": "https://diffshield.example.com/webhook",
+    "active": true
+  },
+  "redirect_url": "https://diffshield.example.com/installed",
+  "description": "Deterministic AppSec PR Guardian: reverse-fix matching, AST disguise-proof comparison, and automated 12-hour quarantine.",
+  "public": false,
+  "default_permissions": {
+    "checks": "write",
+    "contents": "read",
+    "issues": "write",
+    "pull_requests": "write",
+    "statuses": "write",
+    "metadata": "read"
+  },
+  "default_events": [
+    "pull_request",
+    "pull_request_review_comment",
+    "issue_comment",
+    "installation",
+    "installation_repositories"
+  ]
+}
+

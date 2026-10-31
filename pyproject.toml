@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diffshield"
+version = "1.0.0"
+description = "Deterministic AppSec PR Guardian: reverse-fix matching, AST disguise-proof comparison, and automated 12-hour quarantine."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "httpx>=0.24.0",
+    "pyjwt>=2.8.0",
+    "pyyaml>=6.0",
+    "tree-sitter>=0.26.0",
+    "tree-sitter-javascript>=0.25.0",
+    "tree-sitter-typescript>=0.23.0",
+]
+
+[project.scripts]
+diffshield = "engine.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
